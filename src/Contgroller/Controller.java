@@ -1,0 +1,74 @@
+package Contgroller;
+
+import gui.FormEvent;
+import model.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+public class Controller {
+    Database db= new Database();
+
+    public List<Person> getPeople() {
+        return db.getPeople();
+    }
+
+    public void removePerson(int index) {
+        db.removePerson(index);
+    }
+
+    public void addPerson(FormEvent ev) {
+        String name = ev.getName();
+        String occupation = ev.getOccupation();
+        int ageCatId = ev.getAgeCategory();
+        String empCat = ev.getEmploymentCategory();
+        boolean isUs = ev.isUsCitizen();
+        String taxId = ev.getTaxID();
+        String genderID = ev.getGender();
+
+        AgeCategory ageCategory = null;
+        switch (ageCatId) {
+            case 0:
+                ageCategory = AgeCategory.child;
+                break;
+            case 1:
+                ageCategory = AgeCategory.adult;
+                break;
+            case 2:
+                ageCategory = AgeCategory.senior;
+                break;
+        }
+
+        EmploymentCategory employmentCategory;
+        if (empCat.equals("Employed")) {
+            employmentCategory = EmploymentCategory.employed;
+        } else if (empCat.equals("Self-employed")) {
+            employmentCategory = EmploymentCategory.selfEmployed;
+        }else if (empCat.equals("Unemployed")) {
+            employmentCategory = EmploymentCategory.unemployed;
+        }else {
+            employmentCategory = EmploymentCategory.other;
+            System.err.println(empCat);
+        }
+
+        Gender gender = null;
+        if (genderID.equals("male")) {
+            gender = Gender.male;
+        } else {
+            gender = Gender.female;
+        }
+
+        Person person = new Person(name, occupation, ageCategory,
+                employmentCategory, taxId, isUs, gender);
+        db.addPerson(person);
+    }
+
+    public void saveToFile(File file) throws IOException {
+        db.saveToFile(file);
+    }
+
+    public void loadFromFile(File file) throws IOException {
+        db.loadFromFile(file);
+    }
+}
