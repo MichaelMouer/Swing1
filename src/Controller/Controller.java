@@ -1,4 +1,4 @@
-package Contgroller;
+package Controller;
 
 import gui.FormEvent;
 import model.*;
