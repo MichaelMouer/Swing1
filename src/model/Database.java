@@ -1,14 +1,105 @@
 package model;
 
 import java.io.*;
+import java.sql.*;
 import java.util.*;
 
 public class Database {
 
     private List<Person> people;
+    private Connection con;
 
     public Database() {
         people = new LinkedList<>();
+    }
+
+    public void connect() throws Exception {
+
+        if (con != null) {
+            return;
+        }
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new Exception("Driver not found");
+        }
+        String url = "jdbc:mysql://localhost:3306/swingtest";
+        con = DriverManager.getConnection(url, "root", "Wossy0519");
+        System.out.println("DB Connected " + con);
+    }
+
+
+    public void disconnect() {
+        if (con != null) {
+            try {
+                con.close();
+                System.out.println("DB Disconnected");
+            } catch (SQLException throwables) {
+                System.out.println("Can't close connection");
+            }
+        }
+    }
+
+    public void save() throws SQLException {
+        String checkSql = "select count(*) as count from people where id=?";
+        PreparedStatement checkStmt = con.prepareStatement(checkSql);
+
+        String insertSql = "insert into people (id, name, age, employment_status, tax_id, us_citizen, gender, occupation) values (?, ?, ?, ?, ?, ?, ?, ?)";
+        PreparedStatement insertStatement = con.prepareStatement(insertSql);
+
+        String updateSql = "update people set name=?, age=?, employment_status=?, tax_id=?, us_citizen=?, gender=?, occupation=? where id=?";
+         PreparedStatement updateStatement = con.prepareStatement(updateSql);
+
+        for (Person person : people) {
+            int id = person.getId();
+            String name = person.getName();
+            AgeCategory age = person.getAgeCategory();
+            EmploymentCategory emp = person.getEmpCat();
+            String tax = person.getTaxID();
+            boolean isUs = person.isUsCitizen();
+            Gender gender = person.getGender();
+            String occupation = person.getOccupation();
+
+            checkStmt.setInt(1, id);
+            ResultSet checkResult = checkStmt.executeQuery();
+            checkResult.next();
+            int count = checkResult.getInt(1);
+
+            if (count == 0) {
+                System.out.println("Inserting person with ID " + id);
+                int col = 1;
+                insertStatement.setInt(col++, id);
+                insertStatement.setString(col++, name);
+                insertStatement.setString(col++, age.name());
+                insertStatement.setString(col++, emp.name());
+                insertStatement.setString(col++, tax);
+                insertStatement.setBoolean(col++, isUs);
+                insertStatement.setString(col++, gender.name());
+                insertStatement.setString(col++, occupation);
+
+                insertStatement.executeUpdate();
+            } else {
+                System.out.println("Updating person with ID " + id);
+                int col = 1;
+
+                updateStatement.setString(col++, name);
+                updateStatement.setString(col++, age.name());
+                updateStatement.setString(col++, emp.name());
+                updateStatement.setString(col++, tax);
+                updateStatement.setBoolean(col++, isUs);
+                updateStatement.setString(col++, gender.name());
+                updateStatement.setString(col++, occupation);
+                updateStatement.setInt(col++, id);
+
+                updateStatement.executeUpdate();
+            }
+
+
+        }
+
+        updateStatement.close();
+        insertStatement.close();
+        checkStmt.close();
     }
 
     public void addPerson(Person person) {
@@ -38,15 +129,15 @@ public class Database {
         FileInputStream fis = new FileInputStream(file);
         ObjectInputStream ois = new ObjectInputStream(fis);
 
-            try {
-                Person[] persons = (Person[])ois.readObject();
-                people.clear();
-                people.addAll(Arrays.asList(persons));
+        try {
+            Person[] persons = (Person[]) ois.readObject();
+            people.clear();
+            people.addAll(Arrays.asList(persons));
 
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
-            ois.close();
+        ois.close();
     }
 }
