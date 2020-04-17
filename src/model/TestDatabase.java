@@ -24,6 +24,13 @@ public class TestDatabase {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
+
+        try {
+            db.load();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
         db.disconnect();
     }
 }

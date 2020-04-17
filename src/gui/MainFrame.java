@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.prefs.Preferences;
 
 public class MainFrame extends JFrame {
@@ -62,10 +63,33 @@ public class MainFrame extends JFrame {
 
         setJMenuBar(createMenuBar());
 
-        toolBar.setStringListener(new StringListener() {
+        toolBar.setToolbarListener(new ToolbarListener() {
             @Override
-            public void textEmitted(String text) {
-                textPanel.appendText(text);
+            public void saveEventOccured() {
+                connect();
+
+                try {
+                    controller.save();
+                } catch (SQLException throwables) {
+                    JOptionPane.showMessageDialog(
+                            MainFrame.this, "Unable to save to database",
+                            "Unable to save to database", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
+            @Override
+            public void refreshEventOccured() {
+                connect();
+
+                try {
+                    controller.load();
+                } catch (SQLException throwables) {
+                    JOptionPane.showMessageDialog(
+                            MainFrame.this, "Unable to load from database",
+                            "Unable to save to database", JOptionPane.ERROR_MESSAGE);
+                }
+
+                tablePanel.refresh();
             }
         });
 
@@ -85,6 +109,16 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
+    }
+
+    private void connect() {
+        try {
+            controller.connect();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                    MainFrame.this, "Cannot connect to database",
+                    "Database Connection problem", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private JMenuBar createMenuBar() {
